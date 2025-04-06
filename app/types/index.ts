@@ -1,16 +1,34 @@
+// Auth Types
 export interface User {
-    id: string;
-    name: string;
-    email: string;
-    role: 'admin' | 'user';
+    id: string
+    name: string
+    role: "admin" | "user"
 }
 
-export interface Expense {
-    _id: string;
-    user: string;
-    amount: number;
-    category: string;
-    currency: string;
-    date: string;
-    description: string;
+export interface AuthState {
+    token: string | null
+    user: User | null
+    loading: boolean
+    error: string | null
 }
+
+// Expense Types
+export interface Expense {
+    _id: string
+    amount: number
+    category: string
+    date: string
+    description: string
+    currency: string
+    user?: {
+        _id: string
+        name: string
+    }
+}
+
+export interface ExpenseState {
+    expenses: Expense[]
+    loading: boolean
+    error: string | null
+}
+
