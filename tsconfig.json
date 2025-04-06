@@ -6,7 +6,11 @@
       "@/*": [
         "./*"
       ]
-    }
+    },
+    "moduleResolution": "NodeNext",
+    "target": "esnext",
+    "module": "NodeNext",
+    "jsx": "react-native",
   },
   "include": [
     "**/*.ts",
