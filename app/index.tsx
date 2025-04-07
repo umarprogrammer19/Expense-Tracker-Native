@@ -1,15 +1,24 @@
-import { Text, View } from "react-native";
+"use client"
+
+import { Redirect } from "expo-router"
+import { useAuth } from "../hooks/useAuth"
+import { View, ActivityIndicator } from "react-native"
 
 export default function Index() {
-  return (
-    <View
-      style={{
-        flex: 1,
-        justifyContent: "center",
-        alignItems: "center",
-      }}
-    >
-      <Text>Edit app/index.tsx to edit this screen.</Text>
-    </View>
-  );
+  const { isLoggedIn, isLoading, userRole } = useAuth()
+
+  if (isLoading) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <ActivityIndicator size="large" color="#0066FF" />
+      </View>
+    )
+  }
+
+  if (isLoggedIn) {
+    return userRole === "admin" ? <Redirect href="/admin" /> : <Redirect href="/home" />
+  }
+
+  return <Redirect href="/login" />
 }
+
