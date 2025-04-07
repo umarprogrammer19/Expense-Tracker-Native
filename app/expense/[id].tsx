@@ -5,14 +5,14 @@ import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert, ActivityIn
 import { useLocalSearchParams, useRouter } from "expo-router"
 import { useDispatch, useSelector } from "react-redux"
 import { Ionicons } from "@expo/vector-icons"
-import { deleteExpense } from "../../store/slices/expenseSlice"
-import type { RootState } from "../../store"
+import { deleteExpenseAsync } from "../../store/slices/expenseSlice"
+import type { RootState, AppDispatch } from "../../store"
 
 export default function ExpenseDetailScreen() {
     const { id } = useLocalSearchParams()
     const router = useRouter()
-    const dispatch = useDispatch()
-    const { expenses } = useSelector((state: RootState) => state.expenses)
+    const dispatch = useDispatch<AppDispatch>()
+    const { expenses, loading } = useSelector((state: RootState) => state.expenses)
     const { user } = useSelector((state: RootState) => state.auth)
     const [isDeleting, setIsDeleting] = useState(false)
 
@@ -47,14 +47,11 @@ export default function ExpenseDetailScreen() {
                     onPress: async () => {
                         try {
                             setIsDeleting(true)
-                            // In a real app, this would be an API call
-                            await new Promise((resolve) => setTimeout(resolve, 1000))
-                            dispatch(deleteExpense(expense.id))
+                            await dispatch(deleteExpenseAsync(expense.id)).unwrap()
                             router.back()
-                        } catch (error) {
+                        } catch (error: any) {
                             console.error("Error deleting expense:", error)
-                            Alert.alert("Error", "Failed to delete expense. Please try again.")
-                        } finally {
+                            Alert.alert("Error", error || "Failed to delete expense. Please try again.")
                             setIsDeleting(false)
                         }
                     },
@@ -137,8 +134,8 @@ export default function ExpenseDetailScreen() {
                         <Text style={styles.editButtonText}>Edit Expense</Text>
                     </TouchableOpacity>
 
-                    <TouchableOpacity style={styles.deleteButton} onPress={handleDelete} disabled={isDeleting}>
-                        {isDeleting ? (
+                    <TouchableOpacity style={styles.deleteButton} onPress={handleDelete} disabled={isDeleting || loading}>
+                        {isDeleting || loading ? (
                             <ActivityIndicator size="small" color="#FFFFFF" />
                         ) : (
                             <>
@@ -154,6 +151,7 @@ export default function ExpenseDetailScreen() {
 }
 
 const styles = StyleSheet.create({
+    // Styles remain the same
     container: {
         flex: 1,
         backgroundColor: "#F5F7FA",

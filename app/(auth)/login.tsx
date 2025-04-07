@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import {
     View,
     Text,
@@ -12,59 +12,40 @@ import {
     Platform,
     ScrollView,
     ActivityIndicator,
+    Alert,
 } from "react-native"
 import { Link, useRouter } from "expo-router"
-import { useDispatch } from "react-redux"
-import { login } from "../../store/slices/authSlice"
+import { useDispatch, useSelector } from "react-redux"
+import { login, clearError } from "../../store/slices/authSlice"
+import type { AppDispatch, RootState } from "../../store"
 
 export default function LoginScreen() {
     const [email, setEmail] = useState("")
     const [password, setPassword] = useState("")
-    const [isLoading, setIsLoading] = useState(false)
-    const [error, setError] = useState("")
 
-    const dispatch = useDispatch()
+    const dispatch = useDispatch<AppDispatch>()
     const router = useRouter()
+    const { loading, error } = useSelector((state: RootState) => state.auth)
+
+    useEffect(() => {
+        // Clear any previous errors when component mounts
+        dispatch(clearError())
+    }, [dispatch])
+
+    useEffect(() => {
+        // Show error alert if login fails
+        if (error) {
+            Alert.alert("Login Failed", error)
+        }
+    }, [error])
 
     const handleLogin = async () => {
         if (!email || !password) {
-            setError("Please fill in all fields")
+            Alert.alert("Error", "Please fill in all fields")
             return
         }
 
-        try {
-            setIsLoading(true)
-            setError("")
-
-            // In a real app, this would be an API call
-            // For demo purposes, we'll simulate login with different roles
-            let userRole: "user" | "admin" = "user"
-            if (email === "admin@example.com") {
-                userRole = "admin"
-            }
-
-            // Simulate API delay
-            await new Promise((resolve) => setTimeout(resolve, 1000))
-
-            dispatch(
-                login({
-                    user: {
-                        id: "1",
-                        email,
-                        name: email.split("@")[0],
-                        role: userRole,
-                    },
-                    token: "sample-token-12345",
-                }),
-            )
-
-            // Router will handle redirection based on role in _layout.tsx
-        } catch (err) {
-            setError("Invalid credentials. Please try again.")
-            console.error(err)
-        } finally {
-            setIsLoading(false)
-        }
+        dispatch(login({ email, password }))
     }
 
     return (
@@ -78,8 +59,6 @@ export default function LoginScreen() {
                 <View style={styles.formContainer}>
                     <Text style={styles.title}>Welcome Back</Text>
                     <Text style={styles.subtitle}>Sign in to your account</Text>
-
-                    {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
                     <View style={styles.inputContainer}>
                         <Text style={styles.label}>Email</Text>
@@ -108,8 +87,8 @@ export default function LoginScreen() {
                         <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
                     </TouchableOpacity>
 
-                    <TouchableOpacity style={styles.loginButton} onPress={handleLogin} disabled={isLoading}>
-                        {isLoading ? <ActivityIndicator color="#FFFFFF" /> : <Text style={styles.loginButtonText}>Login</Text>}
+                    <TouchableOpacity style={styles.loginButton} onPress={handleLogin} disabled={loading}>
+                        {loading ? <ActivityIndicator color="#FFFFFF" /> : <Text style={styles.loginButtonText}>Login</Text>}
                     </TouchableOpacity>
 
                     <View style={styles.registerContainer}>
@@ -133,6 +112,7 @@ export default function LoginScreen() {
 }
 
 const styles = StyleSheet.create({
+    // Styles remain the same
     container: {
         flex: 1,
         backgroundColor: "#FFFFFF",
@@ -171,11 +151,6 @@ const styles = StyleSheet.create({
         fontFamily: "Poppins-Regular",
         color: "#666666",
         marginBottom: 30,
-    },
-    errorText: {
-        color: "#FF3B30",
-        marginBottom: 15,
-        fontFamily: "Poppins-Regular",
     },
     inputContainer: {
         marginBottom: 20,

@@ -13,9 +13,12 @@ import * as SplashScreen from "expo-splash-screen"
 
 import { store } from "../store"
 import { useAuth } from "../hooks/useAuth"
+import { checkAuth } from "../store/slices/authSlice"
 
+// Keep the splash screen visible while we fetch resources
 SplashScreen.preventAutoHideAsync()
 
+// Auth context provider to manage authentication state
 function AuthProvider({ children }: { children: React.ReactNode }) {
   const { isLoggedIn, isLoading, userRole } = useAuth()
   const segments = useSegments()
@@ -50,6 +53,9 @@ export default function RootLayout() {
   })
 
   useEffect(() => {
+    // Initialize auth state
+    store.dispatch(checkAuth())
+
     if (fontsLoaded) {
       SplashScreen.hideAsync()
     }

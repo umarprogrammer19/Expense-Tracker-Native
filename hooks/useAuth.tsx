@@ -1,33 +1,24 @@
 "use client"
 
-import { useEffect, useState } from "react"
-import { useSelector } from "react-redux"
-import type { RootState } from "../store"
+import { useEffect } from "react"
+import { useSelector, useDispatch } from "react-redux"
+import type { RootState, AppDispatch } from "../store"
+import { checkAuth } from "../store/slices/authSlice"
 
 export function useAuth() {
-    const { user, token, loading } = useSelector((state: RootState) => state.auth)
-    const [isLoading, setIsLoading] = useState(true)
+    const dispatch = useDispatch<AppDispatch>()
+    const { user, token, loading, error } = useSelector((state: RootState) => state.auth)
 
     useEffect(() => {
-        // Simulate checking token validity or refreshing token
-        const checkAuth = async () => {
-            try {
-                await new Promise((resolve) => setTimeout(resolve, 500))
-                setIsLoading(false)
-            } catch (error) {
-                console.error("Auth check error:", error)
-                setIsLoading(false)
-            }
-        }
-
-        checkAuth()
-    }, [token])
+        dispatch(checkAuth())
+    }, [dispatch])
 
     return {
         isLoggedIn: !!token,
-        isLoading: isLoading || loading,
+        isLoading: loading,
         user,
         userRole: user?.role || null,
+        error,
     }
 }
 

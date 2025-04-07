@@ -11,12 +11,14 @@ import {
     KeyboardAvoidingView,
     Platform,
     ActivityIndicator,
+    Alert,
 } from "react-native"
-import { useDispatch } from "react-redux"
+import { useDispatch, useSelector } from "react-redux"
 import { useRouter } from "expo-router"
 import { Ionicons } from "@expo/vector-icons"
 import DatePicker from "react-native-date-picker"
-import { addExpense } from "../../store/slices/expenseSlice"
+import { addExpenseAsync } from "../../store/slices/expenseSlice"
+import type { AppDispatch, RootState } from "../../store"
 
 const categories = [
     { id: "food", name: "Food", icon: "fast-food-outline" },
@@ -30,8 +32,9 @@ const categories = [
 ]
 
 export default function AddExpenseScreen() {
-    const dispatch = useDispatch()
+    const dispatch = useDispatch<AppDispatch>()
     const router = useRouter()
+    const { loading, error } = useSelector((state: RootState) => state.expenses)
 
     const [description, setDescription] = useState("")
     const [amount, setAmount] = useState("")
@@ -39,7 +42,6 @@ export default function AddExpenseScreen() {
     const [date, setDate] = useState(new Date())
     const [notes, setNotes] = useState("")
     const [showDatePicker, setShowDatePicker] = useState(false)
-    const [isSubmitting, setIsSubmitting] = useState(false)
     const [errors, setErrors] = useState<Record<string, string>>({})
 
     const validateForm = () => {
@@ -67,10 +69,7 @@ export default function AddExpenseScreen() {
         if (!validateForm()) return
 
         try {
-            setIsSubmitting(true)
-
-            const newExpense = {
-                id: Math.random().toString(36).substr(2, 9),
+            const expenseData = {
                 description,
                 amount: Number.parseFloat(amount),
                 category,
@@ -78,16 +77,11 @@ export default function AddExpenseScreen() {
                 notes,
             }
 
-            // In a real app, this would be an API call
-            await new Promise((resolve) => setTimeout(resolve, 1000))
-
-            dispatch(addExpense(newExpense))
+            await dispatch(addExpenseAsync(expenseData)).unwrap()
             router.back()
-        } catch (error) {
+        } catch (error: any) {
             console.error("Error adding expense:", error)
-            setErrors({ submit: "Failed to add expense. Please try again." })
-        } finally {
-            setIsSubmitting(false)
+            Alert.alert("Error", error || "Failed to add expense. Please try again.")
         }
     }
 
@@ -105,9 +99,9 @@ export default function AddExpenseScreen() {
                     <Text style={styles.headerTitle}>Add New Expense</Text>
                 </View>
 
-                {errors.submit && (
+                {error && (
                     <View style={styles.errorContainer}>
-                        <Text style={styles.errorText}>{errors.submit}</Text>
+                        <Text style={styles.errorText}>{error}</Text>
                     </View>
                 )}
 
@@ -182,12 +176,8 @@ export default function AddExpenseScreen() {
                         />
                     </View>
 
-                    <TouchableOpacity style={styles.submitButton} onPress={handleSubmit} disabled={isSubmitting}>
-                        {isSubmitting ? (
-                            <ActivityIndicator color="#FFFFFF" />
-                        ) : (
-                            <Text style={styles.submitButtonText}>Add Expense</Text>
-                        )}
+                    <TouchableOpacity style={styles.submitButton} onPress={handleSubmit} disabled={loading}>
+                        {loading ? <ActivityIndicator color="#FFFFFF" /> : <Text style={styles.submitButtonText}>Add Expense</Text>}
                     </TouchableOpacity>
                 </View>
             </ScrollView>
@@ -196,6 +186,7 @@ export default function AddExpenseScreen() {
 }
 
 const styles = StyleSheet.create({
+    // Styles remain the same
     container: {
         flex: 1,
         backgroundColor: "#F5F7FA",

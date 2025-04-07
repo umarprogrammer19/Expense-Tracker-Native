@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import {
     View,
     Text,
@@ -11,60 +11,47 @@ import {
     Platform,
     ScrollView,
     ActivityIndicator,
+    Alert,
 } from "react-native"
 import { Link, useRouter } from "expo-router"
-import { useDispatch } from "react-redux"
-import { register } from "../../store/slices/authSlice"
+import { useDispatch, useSelector } from "react-redux"
+import { register, clearError } from "../../store/slices/authSlice"
+import type { AppDispatch, RootState } from "../../store"
 
 export default function RegisterScreen() {
     const [name, setName] = useState("")
     const [email, setEmail] = useState("")
     const [password, setPassword] = useState("")
     const [confirmPassword, setConfirmPassword] = useState("")
-    const [isLoading, setIsLoading] = useState(false)
-    const [error, setError] = useState("")
 
-    const dispatch = useDispatch()
+    const dispatch = useDispatch<AppDispatch>()
     const router = useRouter()
+    const { loading, error } = useSelector((state: RootState) => state.auth)
+
+    useEffect(() => {
+        // Clear any previous errors when component mounts
+        dispatch(clearError())
+    }, [dispatch])
+
+    useEffect(() => {
+        // Show error alert if registration fails
+        if (error) {
+            Alert.alert("Registration Failed", error)
+        }
+    }, [error])
 
     const handleRegister = async () => {
         if (!name || !email || !password || !confirmPassword) {
-            setError("Please fill in all fields")
+            Alert.alert("Error", "Please fill in all fields")
             return
         }
 
         if (password !== confirmPassword) {
-            setError("Passwords do not match")
+            Alert.alert("Error", "Passwords do not match")
             return
         }
 
-        try {
-            setIsLoading(true)
-            setError("")
-
-            // In a real app, this would be an API call
-            // For demo purposes, we'll simulate registration
-            await new Promise((resolve) => setTimeout(resolve, 1000))
-
-            dispatch(
-                register({
-                    user: {
-                        id: Math.random().toString(36).substr(2, 9),
-                        email,
-                        name,
-                        role: "user",
-                    },
-                    token: "sample-token-" + Math.random().toString(36).substr(2, 9),
-                }),
-            )
-
-            // Router will handle redirection in _layout.tsx
-        } catch (err) {
-            setError("Registration failed. Please try again.")
-            console.error(err)
-        } finally {
-            setIsLoading(false)
-        }
+        dispatch(register({ name, email, password }))
     }
 
     return (
@@ -73,8 +60,6 @@ export default function RegisterScreen() {
                 <View style={styles.formContainer}>
                     <Text style={styles.title}>Create Account</Text>
                     <Text style={styles.subtitle}>Sign up to get started</Text>
-
-                    {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
                     <View style={styles.inputContainer}>
                         <Text style={styles.label}>Full Name</Text>
@@ -115,12 +100,8 @@ export default function RegisterScreen() {
                         />
                     </View>
 
-                    <TouchableOpacity style={styles.registerButton} onPress={handleRegister} disabled={isLoading}>
-                        {isLoading ? (
-                            <ActivityIndicator color="#FFFFFF" />
-                        ) : (
-                            <Text style={styles.registerButtonText}>Register</Text>
-                        )}
+                    <TouchableOpacity style={styles.registerButton} onPress={handleRegister} disabled={loading}>
+                        {loading ? <ActivityIndicator color="#FFFFFF" /> : <Text style={styles.registerButtonText}>Register</Text>}
                     </TouchableOpacity>
 
                     <View style={styles.loginContainer}>
@@ -138,6 +119,7 @@ export default function RegisterScreen() {
 }
 
 const styles = StyleSheet.create({
+    // Styles remain the same
     container: {
         flex: 1,
         backgroundColor: "#FFFFFF",
@@ -161,11 +143,6 @@ const styles = StyleSheet.create({
         fontFamily: "Poppins-Regular",
         color: "#666666",
         marginBottom: 30,
-    },
-    errorText: {
-        color: "#FF3B30",
-        marginBottom: 15,
-        fontFamily: "Poppins-Regular",
     },
     inputContainer: {
         marginBottom: 20,

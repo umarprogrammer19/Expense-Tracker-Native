@@ -1,18 +1,25 @@
 "use client"
 
-import { useState } from "react"
-import { View, Text, StyleSheet, TouchableOpacity, Image, Switch, Alert, ScrollView } from "react-native"
-import { useDispatch, useSelector } from "react-redux"
 import { Ionicons } from "@expo/vector-icons"
+import { useState } from "react"
+import {
+    ActivityIndicator,
+    Alert,
+    Image,
+    ScrollView,
+    StyleSheet,
+    Switch,
+    Text,
+    TouchableOpacity,
+    View,
+} from "react-native"
+import { useDispatch, useSelector } from "react-redux"
+import type { AppDispatch, RootState } from "../../store"
 import { logout } from "../../store/slices/authSlice"
-import type { RootState } from "../../store"
-import { useRouter } from "expo-router"
 
 export default function ProfileScreen() {
-    const dispatch = useDispatch()
-    const router = useRouter()
-    const { user } = useSelector((state: RootState) => state.auth)
-
+    const dispatch = useDispatch<AppDispatch>()
+    const { user, loading } = useSelector((state: RootState) => state.auth)
     const [notificationsEnabled, setNotificationsEnabled] = useState(true)
     const [darkModeEnabled, setDarkModeEnabled] = useState(false)
     const [biometricEnabled, setBiometricEnabled] = useState(false)
@@ -30,13 +37,13 @@ export default function ProfileScreen() {
                     text: "Logout",
                     onPress: () => {
                         dispatch(logout())
-                        router.replace("/login")
                     },
                     style: "destructive",
                 },
             ],
             { cancelable: true },
-        )
+        );
+        localStorage.clear();
     }
 
     return (
@@ -58,6 +65,7 @@ export default function ProfileScreen() {
                 </TouchableOpacity>
             </View>
 
+            {/* Rest of the profile screen remains the same */}
             <View style={styles.section}>
                 <Text style={styles.sectionTitle}>Account</Text>
 
@@ -157,9 +165,15 @@ export default function ProfileScreen() {
                 </TouchableOpacity>
             </View>
 
-            <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-                <Ionicons name="log-out-outline" size={20} color="#FF3B30" />
-                <Text style={styles.logoutText}>Logout</Text>
+            <TouchableOpacity style={styles.logoutButton} onPress={handleLogout} disabled={loading}>
+                {loading ? (
+                    <ActivityIndicator color="#FF3B30" size="small" />
+                ) : (
+                    <>
+                        <Ionicons name="log-out-outline" size={20} color="#FF3B30" />
+                        <Text style={styles.logoutText}>Logout</Text>
+                    </>
+                )}
             </TouchableOpacity>
 
             <View style={styles.versionContainer}>
@@ -170,6 +184,7 @@ export default function ProfileScreen() {
 }
 
 const styles = StyleSheet.create({
+    // Styles remain the same
     container: {
         flex: 1,
         backgroundColor: "#F5F7FA",
