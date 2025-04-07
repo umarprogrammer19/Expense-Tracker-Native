@@ -6,11 +6,11 @@ import type { RootState } from "../redux/store"
 import { Ionicons } from "@expo/vector-icons"
 
 // Screens
-import LoginScreen from "../(screens)/LoginScreen"
-import RegisterScreen from "../(screens)/RegisterScreen"
-import DashboardScreen from "../(screens)/DashboardScreen"
-import ExpenseListScreen from "../(screens)/ExpenseListScreen"
-import AddExpenseScreen from "../(screens)/AddExpenseScreen"
+import LoginScreen from "../screens/LoginScreen"
+import RegisterScreen from "../screens/RegisterScreen"
+import DashboardScreen from "../screens/DashboardScreen"
+import ExpenseListScreen from "../screens/ExpenseListScreen"
+import AddExpenseScreen from "../screens/AddExpenseScreen"
 
 // Stack navigators
 const AuthStack = createStackNavigator()
@@ -95,7 +95,7 @@ const MainNavigator = () => (
 
 // Root navigator
 const AppNavigator = () => {
-    const { token }: any = useSelector((state: RootState) => state.auth)
+    const { token } = useSelector((state: RootState) => state.auth)
 
     return <NavigationContainer>{token ? <MainNavigator /> : <AuthNavigator />}</NavigationContainer>
 }
